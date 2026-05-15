@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import {
   Link,
+  NavLink,
   Navigate,
   Outlet,
   Route,
@@ -73,31 +74,74 @@ function AppLayout() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div>
-          <p className="eyebrow">Sajada</p>
-          <h1>Panel operativo</h1>
+        <div className="sidebar-main">
+          <div className="brand-lockup">
+            <strong>Sajada</strong>
+            <span>Panel de Control</span>
+          </div>
+
+          <nav className="nav-list" aria-label="Principal">
+            <NavLink to="/dashboard">
+              <span aria-hidden="true">D</span>
+              Dashboard
+            </NavLink>
+            {canManageOperationalData && (
+              <NavLink to="/inventario">
+                <span aria-hidden="true">I</span>
+                Inventario
+              </NavLink>
+            )}
+            {canManageOperationalData && (
+              <NavLink to="/productos">
+                <span aria-hidden="true">P</span>
+                Productos
+              </NavLink>
+            )}
+            {canManageOperationalData && (
+              <NavLink to="/clientes">
+                <span aria-hidden="true">C</span>
+                Clientes
+              </NavLink>
+            )}
+            {canManageOperationalData && (
+              <NavLink to="/categorias">
+                <span aria-hidden="true">G</span>
+                Categorias
+              </NavLink>
+            )}
+          </nav>
         </div>
 
-        <nav className="nav-list" aria-label="Principal">
-          <Link to="/dashboard">Inicio</Link>
-          {canManageOperationalData && <Link to="/clientes">Clientes</Link>}
-          {canManageOperationalData && <Link to="/inventario">Inventario</Link>}
-          {canManageOperationalData && <Link to="/productos">Productos</Link>}
-          {canManageOperationalData && <Link to="/categorias">Categorias</Link>}
-        </nav>
-
         <div className="session-box">
-          <span>{user?.username}</span>
-          <strong>{user?.rol}</strong>
+          <div className="user-avatar">{user?.username?.slice(0, 2).toUpperCase()}</div>
+          <div>
+            <span>{user?.username}</span>
+            <strong>{user?.rol}</strong>
+          </div>
           <button type="button" className="ghost-button" onClick={handleLogout}>
-            Cerrar sesion
+            Salir
           </button>
         </div>
       </aside>
 
-      <main className="content">
-        <Outlet />
-      </main>
+      <section className="workspace">
+        <header className="topbar">
+          <div className="topbar-copy">
+            <span className="eyebrow">Panel de Control</span>
+          </div>
+          <div className="topbar-actions">
+            <label className="search-shell">
+              <span className="sr-only">Buscar</span>
+              <input placeholder="Buscar productos..." />
+            </label>
+            <div className="status-dot" aria-hidden="true" />
+          </div>
+        </header>
+
+        <main className="content">
+          <Outlet />
+        </main>
+      </section>
     </div>
   )
 }
