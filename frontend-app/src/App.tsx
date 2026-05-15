@@ -81,14 +81,10 @@ function AppLayout() {
           </div>
 
           <nav className="nav-list" aria-label="Principal">
-            <NavLink to="/dashboard">
-              <span aria-hidden="true">D</span>
-              Dashboard
-            </NavLink>
             {canManageOperationalData && (
               <NavLink to="/inventario">
-                <span aria-hidden="true">I</span>
-                Inventario
+                <span aria-hidden="true">D</span>
+                Dashboard
               </NavLink>
             )}
             {canManageOperationalData && (
