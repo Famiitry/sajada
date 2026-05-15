@@ -152,7 +152,7 @@ router.get('/', asyncHandler(async (req, res, next) => {
 
   const { count, rows } = await Producto.findAndCountAll({
     where,
-    include,
+    include: [{ model: Categoria, as: 'categoria' }],
     limit: l,
     offset,
     order: [['createdAt', 'DESC']]
@@ -173,8 +173,10 @@ router.post(
   '/',
   authorize('admin', 'vendedor'),
   [
-    body('nombre').notEmpty().withMessage('Nombre is required'),
+    body('nombre').trim().notEmpty().withMessage('Nombre is required'),
+    body('descripcion').optional({ nullable: true }).trim(),
     body('precio').isFloat({ min: 0 }).withMessage('Precio must be a positive number'),
+    body('stock').optional().isInt({ min: 0 }).withMessage('Stock must be a positive integer'),
     body('categoriaId').isInt().withMessage('Categoria ID is required')
   ],
   asyncHandler(async (req, res, next) => {
@@ -204,14 +206,36 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 router.put(
   '/:id',
   authorize('admin', 'vendedor'),
+  [
+    body('nombre').optional().trim().notEmpty().withMessage('Nombre cannot be empty'),
+    body('descripcion').optional({ nullable: true }).trim(),
+    body('precio').optional().isFloat({ min: 0 }).withMessage('Precio must be a positive number'),
+    body('stock').optional().isInt({ min: 0 }).withMessage('Stock must be a positive integer'),
+    body('categoriaId').optional().isInt().withMessage('Categoria ID must be an integer')
+  ],
   asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError('Validation failed', errors.array());
+    }
+
     const producto = await Producto.findByPk(req.params.id);
     if (!producto) {
       throw new NotFoundError('Producto not found');
     }
 
+    if (req.body.categoriaId) {
+      const categoria = await Categoria.findByPk(req.body.categoriaId);
+      if (!categoria) {
+        throw new NotFoundError('Categoria not found');
+      }
+    }
+
     await producto.update(req.body);
-    res.json(producto);
+    const updatedProducto = await Producto.findByPk(producto.id, {
+      include: [{ model: Categoria, as: 'categoria' }]
+    });
+    res.json(updatedProducto);
   })
 );
 

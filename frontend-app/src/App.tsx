@@ -10,6 +10,9 @@ import {
 } from 'react-router-dom'
 import { ApiError, clientesApi, type Cliente, type RegisterPayload } from './api'
 import { AuthProvider, useAuth } from './auth'
+import { CategoriesPage } from './features/categorias/CategoriesPage'
+import { DashboardPage as InventoryDashboardPage } from './features/dashboard/DashboardPage'
+import { ProductsPage } from './features/productos/ProductsPage'
 import './App.css'
 
 const emptyCliente = {
@@ -60,7 +63,7 @@ function LoadingScreen() {
 function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const canManageClientes = user?.rol === 'admin' || user?.rol === 'vendedor'
+  const canManageOperationalData = user?.rol === 'admin' || user?.rol === 'vendedor'
 
   const handleLogout = () => {
     logout()
@@ -77,7 +80,10 @@ function AppLayout() {
 
         <nav className="nav-list" aria-label="Principal">
           <Link to="/dashboard">Inicio</Link>
-          {canManageClientes && <Link to="/clientes">Clientes</Link>}
+          {canManageOperationalData && <Link to="/clientes">Clientes</Link>}
+          {canManageOperationalData && <Link to="/inventario">Inventario</Link>}
+          {canManageOperationalData && <Link to="/productos">Productos</Link>}
+          {canManageOperationalData && <Link to="/categorias">Categorias</Link>}
         </nav>
 
         <div className="session-box">
@@ -239,7 +245,7 @@ function AuthScreen({
 
 function DashboardPage() {
   const { user } = useAuth()
-  const canManageClientes = user?.rol === 'admin' || user?.rol === 'vendedor'
+  const canManageOperationalData = user?.rol === 'admin' || user?.rol === 'vendedor'
 
   return (
     <section className="page-stack">
@@ -266,16 +272,27 @@ function DashboardPage() {
         </article>
       </div>
 
-      {canManageClientes ? (
-        <div className="action-band">
-          <div>
-            <h3>Clientes</h3>
-            <p>Gestiona registros de clientes y permisos de venta.</p>
+      {canManageOperationalData ? (
+        <>
+          <div className="action-band">
+            <div>
+              <h3>Clientes</h3>
+              <p>Gestiona registros de clientes y permisos de venta.</p>
+            </div>
+            <Link className="primary-button link-button" to="/clientes">
+              Abrir clientes
+            </Link>
           </div>
-          <Link className="primary-button link-button" to="/clientes">
-            Abrir clientes
-          </Link>
-        </div>
+          <div className="action-band">
+            <div>
+              <h3>Inventario</h3>
+              <p>Administra productos, categorias y niveles de stock.</p>
+            </div>
+            <Link className="primary-button link-button" to="/inventario">
+              Abrir inventario
+            </Link>
+          </div>
+        </>
       ) : (
         <div className="action-band">
           <div>
@@ -285,6 +302,16 @@ function DashboardPage() {
         </div>
       )}
     </section>
+  )
+}
+
+function InventoryDashboardRoute() {
+  const navigate = useNavigate()
+
+  return (
+    <InventoryDashboardPage
+      onNavigate={(view) => navigate(view === 'dashboard' ? '/inventario' : `/${view}`)}
+    />
   )
 }
 
@@ -544,6 +571,9 @@ function AppRoutes() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route element={<ProtectedRoute roles={['admin', 'vendedor']} />}>
               <Route path="/clientes" element={<ClientesPage />} />
+              <Route path="/inventario" element={<InventoryDashboardRoute />} />
+              <Route path="/productos" element={<ProductsPage />} />
+              <Route path="/categorias" element={<CategoriesPage />} />
             </Route>
           </Route>
         </Route>

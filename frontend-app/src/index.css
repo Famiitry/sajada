@@ -1,3 +1,6 @@
+@import './styles/tokens.css';
+@import './styles/globals.css';
+
 :root {
   --text: #596579;
   --text-h: #172033;
