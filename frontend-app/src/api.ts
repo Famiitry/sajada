@@ -50,7 +50,8 @@ export type ClientesResponse = {
   }
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const rawApiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const API_URL = rawApiUrl.endsWith('/api') ? rawApiUrl.slice(0, -4) : rawApiUrl
 
 type RequestOptions = RequestInit & {
   token?: string | null
