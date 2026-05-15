@@ -73,16 +73,16 @@ const options = {
         },
         RegisterRequest: {
           type: 'object',
-          required: ['username', 'password', 'email', 'nombre', 'apellido'],
+          required: ['username', 'password', 'email', 'nombre', 'apellido', 'telefono', 'direccion'],
           properties: {
             username: { type: 'string' },
             password: { type: 'string' },
+            identificacion: { type: 'string' },
             email: { type: 'string' },
             nombre: { type: 'string' },
             apellido: { type: 'string' },
             telefono: { type: 'string' },
             direccion: { type: 'string' },
-            rol: { type: 'string', enum: ['admin', 'vendedor', 'user'] },
           },
         },
       },

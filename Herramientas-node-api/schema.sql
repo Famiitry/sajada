@@ -1,0 +1,72 @@
+BEGIN;
+
+DROP TABLE IF EXISTS detalleventa;
+DROP TABLE IF EXISTS venta;
+DROP TABLE IF EXISTS producto;
+DROP TABLE IF EXISTS usuario;
+DROP TABLE IF EXISTS cliente;
+DROP TABLE IF EXISTS categoria;
+
+CREATE TABLE categoria (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL UNIQUE,
+  descripcion VARCHAR(255),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE cliente (
+  id SERIAL PRIMARY KEY,
+  identificacion VARCHAR(255) NOT NULL UNIQUE,
+  nombre VARCHAR(255) NOT NULL,
+  apellido VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  telefono VARCHAR(255) NOT NULL,
+  direccion VARCHAR(255) NOT NULL,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE usuario (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  rol VARCHAR(20) NOT NULL DEFAULT 'user',
+  "clienteId" INTEGER REFERENCES cliente(id),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  CONSTRAINT usuario_rol_check CHECK (rol IN ('admin', 'vendedor', 'user'))
+);
+
+CREATE TABLE producto (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  descripcion VARCHAR(255),
+  precio NUMERIC(10, 2) NOT NULL,
+  stock INTEGER NOT NULL DEFAULT 0,
+  "categoriaId" INTEGER NOT NULL REFERENCES categoria(id),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE venta (
+  id SERIAL PRIMARY KEY,
+  fecha TIMESTAMP NOT NULL DEFAULT NOW(),
+  total NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  "clienteId" INTEGER NOT NULL REFERENCES cliente(id),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE detalleventa (
+  id SERIAL PRIMARY KEY,
+  cantidad INTEGER NOT NULL,
+  "precioUnitario" NUMERIC(10, 2) NOT NULL,
+  subtotal NUMERIC(10, 2) NOT NULL,
+  "ventaId" INTEGER NOT NULL REFERENCES venta(id),
+  "productoId" INTEGER NOT NULL REFERENCES producto(id),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+COMMIT;
