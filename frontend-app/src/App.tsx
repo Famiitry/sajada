@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import {
-  Link,
-  NavLink,
-  Navigate,
-  Outlet,
-  Route,
-  BrowserRouter as Router,
-  Routes,
-  useNavigate,
-} from 'react-router-dom'
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { ApiError, clientesApi, type Cliente, type RegisterPayload } from './api'
 import { AuthProvider, useAuth } from './auth'
 import { CategoriesPage } from './features/categorias/CategoriesPage'
@@ -34,23 +32,84 @@ function getErrorMessage(error: unknown) {
   return 'Ocurrio un error inesperado'
 }
 
-function ProtectedRoute({ roles }: { roles?: string[] }) {
-  const { user, loading } = useAuth()
-
-  if (loading) return <LoadingScreen />
-  if (!user) return <Navigate to="/login" replace />
-  if (roles && !roles.includes(user.rol)) return <Navigate to="/dashboard" replace />
-
-  return <Outlet />
+function getCurrentPath() {
+  return window.location.pathname === '/' ? '/dashboard' : window.location.pathname
 }
 
-function PublicRoute() {
-  const { user, loading } = useAuth()
+function usePath() {
+  const [path, setPath] = useState(getCurrentPath)
 
-  if (loading) return <LoadingScreen />
-  if (user) return <Navigate to="/dashboard" replace />
+  useEffect(() => {
+    const handlePopState = () => setPath(getCurrentPath())
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
-  return <Outlet />
+  const navigate = useCallback((to: string, replace = false) => {
+    if (replace) {
+      window.history.replaceState({}, '', to)
+    } else {
+      window.history.pushState({}, '', to)
+    }
+    setPath(getCurrentPath())
+  }, [])
+
+  return { path, navigate }
+}
+
+function AppLink({
+  to,
+  children,
+  className,
+}: {
+  to: string
+  children: ReactNode
+  className?: string
+}) {
+  const { navigate } = useNavigation()
+
+  return (
+    <a
+      className={className}
+      href={to}
+      onClick={(event) => {
+        event.preventDefault()
+        navigate(to)
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
+function AppNavLink({ to, children }: { to: string; children: ReactNode }) {
+  const { path, navigate } = useNavigation()
+
+  return (
+    <a
+      className={path === to ? 'active' : undefined}
+      href={to}
+      onClick={(event) => {
+        event.preventDefault()
+        navigate(to)
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
+type NavigationContextValue = {
+  path: string
+  navigate: (to: string, replace?: boolean) => void
+}
+
+const NavigationContext = createContext<NavigationContextValue | null>(null)
+
+function useNavigation() {
+  const context = useContext(NavigationContext)
+  if (!context) throw new Error('NavigationContext no esta disponible')
+  return context
 }
 
 function LoadingScreen() {
@@ -61,9 +120,9 @@ function LoadingScreen() {
   )
 }
 
-function AppLayout() {
+function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { navigate } = useNavigation()
   const canManageOperationalData = user?.rol === 'admin' || user?.rol === 'vendedor'
 
   const handleLogout = () => {
@@ -81,24 +140,30 @@ function AppLayout() {
           </div>
 
           <nav className="nav-list" aria-label="Principal">
-            <NavLink to="/inventario">
+            <AppNavLink to="/inventario">
               <span aria-hidden="true">D</span>
               Dashboard
-            </NavLink>
-            <NavLink to="/productos">
+            </AppNavLink>
+            <AppNavLink to="/productos">
               <span aria-hidden="true">P</span>
               Productos
-            </NavLink>
+            </AppNavLink>
             {canManageOperationalData && (
-              <NavLink to="/clientes">
+              <AppNavLink to="/clientes">
                 <span aria-hidden="true">C</span>
                 Clientes
-              </NavLink>
+              </AppNavLink>
             )}
-            <NavLink to="/categorias">
+            {canManageOperationalData && (
+              <AppNavLink to="/ventas">
+                <span aria-hidden="true">V</span>
+                Ventas
+              </AppNavLink>
+            )}
+            <AppNavLink to="/categorias">
               <span aria-hidden="true">G</span>
               Categorias
-            </NavLink>
+            </AppNavLink>
           </nav>
         </div>
 
@@ -128,9 +193,7 @@ function AppLayout() {
           </div>
         </header>
 
-        <main className="content">
-          <Outlet />
-        </main>
+        <main className="content">{children}</main>
       </section>
     </div>
   )
@@ -138,7 +201,7 @@ function AppLayout() {
 
 function LoginPage() {
   const { login } = useAuth()
-  const navigate = useNavigate()
+  const { navigate } = useNavigation()
   const [form, setForm] = useState({ username: '', password: '' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -150,7 +213,7 @@ function LoginPage() {
 
     try {
       await login(form)
-      navigate('/dashboard')
+      navigate('/dashboard', true)
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -184,7 +247,7 @@ function LoginPage() {
         </button>
       </form>
       <p className="auth-link">
-        No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+        No tienes cuenta? <AppLink to="/register">Crear cuenta</AppLink>
       </p>
     </AuthScreen>
   )
@@ -192,7 +255,7 @@ function LoginPage() {
 
 function RegisterPage() {
   const { register } = useAuth()
-  const navigate = useNavigate()
+  const { navigate } = useNavigation()
   const [form, setForm] = useState<RegisterForm>({
     username: '',
     password: '',
@@ -213,7 +276,7 @@ function RegisterPage() {
 
     try {
       await register(form)
-      navigate('/dashboard')
+      navigate('/dashboard', true)
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -250,7 +313,7 @@ function RegisterPage() {
         </button>
       </form>
       <p className="auth-link">
-        Ya tienes cuenta? <Link to="/login">Ingresar</Link>
+        Ya tienes cuenta? <AppLink to="/login">Ingresar</AppLink>
       </p>
     </AuthScreen>
   )
@@ -313,18 +376,27 @@ function DashboardPage() {
               <h3>Clientes</h3>
               <p>Gestiona registros de clientes y permisos de venta.</p>
             </div>
-            <Link className="primary-button link-button" to="/clientes">
+            <AppLink className="primary-button link-button" to="/clientes">
               Abrir clientes
-            </Link>
+            </AppLink>
+          </div>
+          <div className="action-band">
+            <div>
+              <h3>Ventas</h3>
+              <p>Registra ventas, revisa historiales y valida el descuento de stock.</p>
+            </div>
+            <AppLink className="primary-button link-button" to="/ventas">
+              Abrir ventas
+            </AppLink>
           </div>
           <div className="action-band">
             <div>
               <h3>Inventario</h3>
               <p>Administra productos, categorias y niveles de stock.</p>
             </div>
-            <Link className="primary-button link-button" to="/inventario">
+            <AppLink className="primary-button link-button" to="/inventario">
               Abrir inventario
-            </Link>
+            </AppLink>
           </div>
         </>
       ) : (
@@ -340,7 +412,7 @@ function DashboardPage() {
 }
 
 function InventoryDashboardRoute() {
-  const navigate = useNavigate()
+  const { navigate } = useNavigation()
 
   return (
     <InventoryDashboardPage
@@ -530,6 +602,54 @@ function ClientesPage() {
   )
 }
 
+function VentasPage() {
+  const [loading, setLoading] = useState(false)
+
+  const handleNuevaVenta = async () => {
+    setLoading(true)
+
+    try {
+      window.alert('Ventas: abriendo formulario de nueva venta...')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="page-stack">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Operacion</p>
+          <h2>Ventas</h2>
+        </div>
+        <button type="button" className="primary-button" onClick={handleNuevaVenta}>
+          {loading ? 'Cargando...' : 'Nueva venta'}
+        </button>
+      </header>
+
+      <div className="metric-grid">
+        <article className="metric-card">
+          <span>Ventas hoy</span>
+          <strong>$1,240.00</strong>
+        </article>
+        <article className="metric-card">
+          <span>Productos en stock</span>
+          <strong>142</strong>
+        </article>
+        <article className="metric-card">
+          <span>Clientes activos</span>
+          <strong>86</strong>
+        </article>
+      </div>
+
+      <section className="panel-form sales-panel">
+        <h3>Registro de ventas</h3>
+        <p>Formulario de creacion, seleccion de clientes, productos, totales y descuento de stock.</p>
+      </section>
+    </section>
+  )
+}
+
 function ClienteFields<T extends ClienteForm>({
   form,
   onChange,
@@ -592,29 +712,41 @@ function ClienteFields<T extends ClienteForm>({
   )
 }
 
+function PrivateApp({ path }: { path: string }) {
+  const { user } = useAuth()
+  const canManageOperationalData = user?.rol === 'admin' || user?.rol === 'vendedor'
+
+  if (path === '/inventario') return <InventoryDashboardRoute />
+  if (path === '/productos') return <ProductsPage />
+  if (path === '/categorias') return <CategoriesPage />
+  if (path === '/clientes' && canManageOperationalData) return <ClientesPage />
+  if (path === '/ventas' && canManageOperationalData) return <VentasPage />
+  return <DashboardPage />
+}
+
 function AppRoutes() {
+  const navigation = usePath()
+  const { user, loading } = useAuth()
+  const { path, navigate } = navigation
+
+  useEffect(() => {
+    if (loading) return
+    if (!user && path !== '/login' && path !== '/register') navigate('/login', true)
+    if (user && (path === '/login' || path === '/register')) navigate('/dashboard', true)
+  }, [loading, navigate, path, user])
+
+  if (loading) return <LoadingScreen />
+
   return (
-    <Router>
-      <Routes>
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-        </Route>
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/inventario" element={<InventoryDashboardRoute />} />
-            <Route path="/productos" element={<ProductsPage />} />
-            <Route path="/categorias" element={<CategoriesPage />} />
-            <Route element={<ProtectedRoute roles={['admin', 'vendedor']} />}>
-              <Route path="/clientes" element={<ClientesPage />} />
-            </Route>
-          </Route>
-        </Route>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
+    <NavigationContext.Provider value={navigation}>
+      {!user ? (
+        path === '/register' ? <RegisterPage /> : <LoginPage />
+      ) : (
+        <AppLayout>
+          <PrivateApp path={path} />
+        </AppLayout>
+      )}
+    </NavigationContext.Provider>
   )
 }
 

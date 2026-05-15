@@ -80,6 +80,451 @@ src/
     types/
 ```
 
+## Diseno Frontend
+
+El frontend debe evolucionar desde la plantilla base de Vite hacia una interfaz administrativa moderna, limpia y enfocada en productividad. La experiencia debe priorizar lectura rapida, acciones claras y baja friccion para operar clientes, inventario y ventas.
+
+### Estilo Visual
+
+Direccion visual:
+
+- Minimalista.
+- Profesional.
+- Clara para uso administrativo.
+- Responsive desde el inicio.
+- Sin decoracion innecesaria.
+
+Paleta sugerida:
+
+```text
+Background principal: #F8FAFC
+Superficie:            #FFFFFF
+Texto principal:       #0F172A
+Texto secundario:      #64748B
+Borde:                 #E2E8F0
+Primario:              #2563EB
+Primario oscuro:       #1D4ED8
+Exito:                 #16A34A
+Alerta:                #F59E0B
+Error:                 #DC2626
+```
+
+Tipografia:
+
+```text
+Familia: Inter, system-ui, sans-serif
+Titulos: 600 - 700
+Texto:   400 - 500
+Tablas:  400 - 500
+```
+
+Escala de espaciado:
+
+```text
+4px, 8px, 12px, 16px, 24px, 32px, 48px
+```
+
+### Layout Principal
+
+La aplicacion debe usar un layout administrativo con navegacion lateral en escritorio y navegacion compacta en movil.
+
+```text
+Desktop
+
++---------------------------------------------------+
+| Sidebar     | Topbar                              |
+|             |-------------------------------------|
+| Dashboard   | Page title        Primary action     |
+| Clientes    |-------------------------------------|
+| Productos   | Content                             |
+| Categorias  | Cards / tables / forms              |
+| Ventas      |                                     |
++---------------------------------------------------+
+
+Mobile
+
++-------------------------------------+
+| Topbar + menu button                |
+|-------------------------------------|
+| Page title                          |
+| Primary action                      |
+|-------------------------------------|
+| Content stacked                     |
++-------------------------------------+
+```
+
+Elementos del layout:
+
+- `Sidebar`: acceso a modulos principales.
+- `Topbar`: usuario activo, rol, logout y estado de sesion.
+- `PageHeader`: titulo, descripcion corta y accion principal.
+- `Content`: tarjetas, tablas, formularios y estados vacios.
+
+### Navegacion
+
+Rutas frontend sugeridas:
+
+```text
+/login
+/register
+/dashboard
+/clientes
+/clientes/nuevo
+/clientes/:id
+/categorias
+/productos
+/productos/nuevo
+/productos/:id
+/ventas
+/ventas/nueva
+/ventas/:id
+```
+
+Reglas de acceso:
+
+```text
+Publico:
+  /login
+  /register
+
+Autenticado:
+  /dashboard
+
+Admin y vendedor:
+  /clientes
+  /categorias
+  /productos
+  /ventas
+
+Solo admin:
+  eliminaciones
+  configuraciones criticas
+```
+
+### Pantallas Principales
+
+#### Login
+
+Objetivo:
+
+- Permitir acceso rapido y claro.
+- Mostrar errores sin exponer detalles sensibles.
+
+Componentes:
+
+- Tarjeta centrada.
+- Campo usuario.
+- Campo contrasena.
+- Boton primario.
+- Link a registro si aplica.
+
+#### Dashboard
+
+Objetivo:
+
+- Dar resumen operativo del negocio.
+
+Contenido recomendado:
+
+- Ventas del dia.
+- Productos con bajo stock.
+- Total de clientes.
+- Ultimas ventas.
+- Accesos rapidos a nueva venta y nuevo producto.
+
+#### Clientes
+
+Objetivo:
+
+- Buscar, crear y administrar clientes.
+
+Componentes:
+
+- Barra de busqueda.
+- Tabla responsive.
+- Acciones por fila.
+- Formulario lateral o pagina dedicada para crear/editar.
+
+Columnas sugeridas:
+
+```text
+Identificacion | Nombre | Email | Telefono | Acciones
+```
+
+#### Categorias
+
+Objetivo:
+
+- Mantener clasificacion simple del inventario.
+
+Componentes:
+
+- Lista compacta.
+- Contador de productos asociados.
+- Formulario de creacion rapida.
+
+#### Productos
+
+Objetivo:
+
+- Administrar inventario con foco en stock y precio.
+
+Componentes:
+
+- Busqueda.
+- Filtro por categoria.
+- Filtro por rango de precio.
+- Tabla o grilla compacta.
+- Badge de stock bajo.
+- Accion para editar producto.
+
+Columnas sugeridas:
+
+```text
+Producto | Categoria | Precio | Stock | Estado | Acciones
+```
+
+Estados visuales:
+
+```text
+Stock alto:       badge verde
+Stock bajo:       badge amarillo
+Sin stock:        badge rojo
+Producto inactivo: texto atenuado
+```
+
+#### Ventas
+
+Objetivo:
+
+- Crear ventas de forma rapida y segura.
+
+Flujo recomendado:
+
+```text
+Seleccionar cliente -> Agregar productos -> Revisar total -> Confirmar venta
+```
+
+Componentes:
+
+- Selector de cliente con busqueda.
+- Buscador de productos.
+- Carrito lateral o resumen fijo.
+- Control de cantidad.
+- Validacion de stock disponible.
+- Total visible antes de confirmar.
+
+#### Detalle de Venta
+
+Objetivo:
+
+- Mostrar comprobante interno de venta.
+
+Contenido:
+
+- Datos del cliente.
+- Fecha.
+- Productos vendidos.
+- Cantidades.
+- Precios unitarios.
+- Subtotales.
+- Total.
+
+### Componentes Compartidos
+
+Componentes base recomendados:
+
+```text
+Button
+Input
+Select
+Textarea
+Badge
+Card
+Table
+Modal
+Drawer
+Toast
+EmptyState
+LoadingState
+ErrorState
+PageHeader
+ProtectedRoute
+AppLayout
+```
+
+Reglas de componentes:
+
+- Cada componente debe tener una responsabilidad clara.
+- Los estilos deben ser consistentes y reutilizables.
+- Los formularios deben mostrar errores cerca del campo correspondiente.
+- Las acciones destructivas deben requerir confirmacion.
+
+### Estados de Interfaz
+
+Cada pantalla que consume API debe contemplar estos estados:
+
+```text
+Idle
+Loading
+Success
+Empty
+Validation error
+Server error
+Unauthorized
+Forbidden
+```
+
+Ejemplos:
+
+- Si no hay productos, mostrar `EmptyState` con accion `Crear producto`.
+- Si el token expira, redirigir a `/login`.
+- Si el usuario no tiene permisos, mostrar una pantalla `403` clara.
+- Si falla el servidor, permitir reintentar.
+
+### Cliente API
+
+El frontend debe centralizar llamadas HTTP en una capa compartida.
+
+Estructura sugerida:
+
+```text
+src/shared/api/
+  http.ts
+  auth.api.ts
+  clientes.api.ts
+  categorias.api.ts
+  productos.api.ts
+  ventas.api.ts
+```
+
+Responsabilidades de `http.ts`:
+
+- Definir `baseURL`.
+- Adjuntar token JWT.
+- Manejar errores comunes.
+- Redirigir si la sesion expira.
+- Normalizar respuestas.
+
+Variable recomendada:
+
+```text
+VITE_API_URL=http://localhost:3000
+```
+
+### Manejo de Sesion
+
+El estado de sesion debe ser pequeno y predecible.
+
+Datos minimos:
+
+```text
+token
+user.id
+user.username
+user.rol
+```
+
+Reglas:
+
+- Persistir token solo si el equipo acepta el riesgo de `localStorage`.
+- Limpiar sesion en logout.
+- Validar rol antes de renderizar rutas protegidas.
+- No duplicar informacion sensible en estado global.
+
+### Formularios
+
+Principios:
+
+- Validar antes de enviar.
+- Mostrar errores por campo.
+- Deshabilitar submit durante envio.
+- Evitar perdida accidental de datos.
+- Confirmar acciones destructivas.
+
+Campos requeridos por modulo:
+
+```text
+Cliente:
+  identificacion, nombre, apellido, email, telefono, direccion
+
+Categoria:
+  nombre
+
+Producto:
+  nombre, precio, categoriaId
+
+Venta:
+  clienteId, productos[]
+```
+
+### Responsive
+
+Breakpoints sugeridos:
+
+```text
+Mobile:  < 768px
+Tablet:  768px - 1023px
+Desktop: >= 1024px
+```
+
+Reglas:
+
+- En movil, las tablas deben convertirse en tarjetas o listas apiladas.
+- Las acciones principales deben permanecer visibles.
+- La navegacion lateral debe convertirse en menu desplegable.
+- Los formularios deben usar una sola columna en movil.
+
+### Accesibilidad
+
+Requisitos minimos:
+
+- Contraste suficiente.
+- Navegacion por teclado.
+- Labels visibles o accesibles en inputs.
+- Estados `focus-visible` claros.
+- Mensajes de error asociados al campo.
+- Botones con texto descriptivo.
+
+### Propuesta Visual Minimalista
+
+El diseño debe sentirse sobrio y funcional:
+
+```text
+Bordes suaves:       12px
+Sombras:             sutiles o inexistentes
+Fondos:              neutros
+Acciones primarias:  azul consistente
+Tablas:              limpias, con alto contraste y buena separacion
+Cards:               solo para agrupar informacion util
+```
+
+Ejemplo de jerarquia de pagina:
+
+```text
+Titulo
+Descripcion breve
+Accion principal
+Filtros
+Contenido
+Paginacion
+```
+
+### Prioridad de Implementacion Frontend
+
+Orden recomendado:
+
+1. Crear layout base y navegacion.
+2. Crear cliente API compartido.
+3. Implementar login y sesion.
+4. Implementar rutas protegidas.
+5. Implementar productos y categorias.
+6. Implementar clientes.
+7. Implementar ventas.
+8. Agregar dashboard.
+9. Pulir responsive y estados vacios.
+10. Agregar pruebas de UI criticas.
+
 ### Backend
 
 Responsabilidad:

@@ -397,6 +397,16 @@ button:disabled {
   padding: 20px;
 }
 
+.sales-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.sales-panel p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 .button-row,
 .table-actions,
 .search-row {
