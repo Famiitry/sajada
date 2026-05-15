@@ -103,7 +103,7 @@ const { Op } = require('sequelize');
 const { Categoria, Producto } = require('../models/index');
 const { authenticate, authorize } = require('../middleware/auth');
 const { errorHandler, asyncHandler } = require('../middleware/error-handler');
-const { ValidationError, NotFoundError } = require('../utils/errors');
+const { ValidationError, NotFoundError, ConflictError } = require('../utils/errors');
 
 const router = express.Router();
 
@@ -147,11 +147,19 @@ router.get('/', asyncHandler(async (req, res, next) => {
 router.post(
   '/',
   authorize('admin', 'vendedor'),
-  [body('nombre').notEmpty().withMessage('Nombre is required')],
+  [
+    body('nombre').trim().notEmpty().withMessage('Nombre is required'),
+    body('descripcion').optional({ nullable: true }).trim()
+  ],
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       throw new ValidationError('Validation failed', errors.array());
+    }
+
+    const existingCategoria = await Categoria.findOne({ where: { nombre: req.body.nombre } });
+    if (existingCategoria) {
+      throw new ConflictError('Categoria name already exists');
     }
 
     const categoria = await Categoria.create(req.body);
@@ -170,10 +178,31 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 router.put(
   '/:id',
   authorize('admin', 'vendedor'),
+  [
+    body('nombre').optional().trim().notEmpty().withMessage('Nombre cannot be empty'),
+    body('descripcion').optional({ nullable: true }).trim()
+  ],
   asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError('Validation failed', errors.array());
+    }
+
     const categoria = await Categoria.findByPk(req.params.id);
     if (!categoria) {
       throw new NotFoundError('Categoria not found');
+    }
+
+    if (req.body.nombre) {
+      const existingCategoria = await Categoria.findOne({
+        where: {
+          nombre: req.body.nombre,
+          id: { [Op.ne]: categoria.id }
+        }
+      });
+      if (existingCategoria) {
+        throw new ConflictError('Categoria name already exists');
+      }
     }
 
     await categoria.update(req.body);
@@ -188,6 +217,11 @@ router.delete(
     const categoria = await Categoria.findByPk(req.params.id);
     if (!categoria) {
       throw new NotFoundError('Categoria not found');
+    }
+
+    const productsCount = await Producto.count({ where: { categoriaId: categoria.id } });
+    if (productsCount > 0) {
+      throw new ConflictError('Cannot delete categoria with associated productos');
     }
 
     await categoria.destroy();
