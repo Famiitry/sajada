@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
 import { Toast } from '../../components/ui/Toast'
+import { useAuth } from '../../auth'
 import type { Categoria, CategoryPayload } from '../../types/inventory'
 import { categoriesService } from './categories.service'
 
@@ -17,6 +18,8 @@ const emptyForm: CategoryFormState = {
 }
 
 export function CategoriesPage() {
+  const { user } = useAuth()
+  const canManageCategories = user?.rol === 'admin' || user?.rol === 'vendedor'
   const [categories, setCategories] = useState<Categoria[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -150,9 +153,11 @@ export function CategoriesPage() {
           <h2>Categorias</h2>
           <p>Agrupa productos para mejorar busquedas, reportes y filtros.</p>
         </div>
-        <Button type="button" onClick={openCreateForm}>
-          + Nueva categoria
-        </Button>
+        {canManageCategories && (
+          <Button type="button" onClick={openCreateForm}>
+            + Nueva categoria
+          </Button>
+        )}
       </section>
 
       <Card className="toolbar-card slim">
@@ -177,9 +182,11 @@ export function CategoriesPage() {
           <div className="state-block">
             <strong>No hay categorias registradas.</strong>
             <p>Crea una categoria para organizar el catalogo de productos.</p>
-            <Button type="button" onClick={openCreateForm}>
-              Nueva categoria
-            </Button>
+            {canManageCategories && (
+              <Button type="button" onClick={openCreateForm}>
+                Nueva categoria
+              </Button>
+            )}
           </div>
         )}
         {!loading && !error && categories.length > 0 && (
@@ -191,7 +198,7 @@ export function CategoriesPage() {
                   <th>Descripcion</th>
                   <th>Productos</th>
                   <th>Actualizado</th>
-                  <th>Acciones</th>
+                  {canManageCategories && <th>Acciones</th>}
                 </tr>
               </thead>
               <tbody>
@@ -203,16 +210,18 @@ export function CategoriesPage() {
                     <td>{category.descripcion || 'Sin descripcion'}</td>
                     <td>{category.productos?.length ?? 0}</td>
                     <td>{category.updatedAt ? new Date(category.updatedAt).toLocaleDateString('es-EC') : 'Sin fecha'}</td>
-                    <td>
-                      <div className="row-actions">
-                        <Button type="button" variant="ghost" onClick={() => openEditForm(category)}>
-                          Editar
-                        </Button>
-                        <Button type="button" variant="danger" onClick={() => setCategoryToDelete(category)}>
-                          Eliminar
-                        </Button>
-                      </div>
-                    </td>
+                    {canManageCategories && (
+                      <td>
+                        <div className="row-actions">
+                          <Button type="button" variant="ghost" onClick={() => openEditForm(category)}>
+                            Editar
+                          </Button>
+                          <Button type="button" variant="danger" onClick={() => setCategoryToDelete(category)}>
+                            Eliminar
+                          </Button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

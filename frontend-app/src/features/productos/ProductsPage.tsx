@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
 import { Toast } from '../../components/ui/Toast'
+import { useAuth } from '../../auth'
 import { categoriesService } from '../categorias/categories.service'
 import { formatCurrency, formatDate, getStockStatus } from './stock'
 import { ProductForm } from './ProductForm'
@@ -22,6 +23,9 @@ const stockTone = {
 } as const
 
 export function ProductsPage() {
+  const { user } = useAuth()
+  const canManageProducts = user?.rol === 'admin' || user?.rol === 'vendedor'
+  const canDeleteProducts = user?.rol === 'admin'
   const [products, setProducts] = useState<Producto[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [filters, setFilters] = useState<ProductFilters>({ page: 1, limit: 20 })
@@ -142,9 +146,11 @@ export function ProductsPage() {
           <h2>Productos</h2>
           <p>Consulta, filtra y administra el inventario de herramientas.</p>
         </div>
-        <Button type="button" onClick={openCreateForm}>
-          + Nuevo producto
-        </Button>
+        {canManageProducts && (
+          <Button type="button" onClick={openCreateForm}>
+            + Nuevo producto
+          </Button>
+        )}
       </section>
 
       <section className="metrics-grid compact">
@@ -222,9 +228,11 @@ export function ProductsPage() {
           <div className="state-block">
             <strong>No hay productos registrados.</strong>
             <p>Crea el primer producto para empezar a controlar el inventario.</p>
-            <Button type="button" onClick={openCreateForm}>
-              Nuevo producto
-            </Button>
+            {canManageProducts && (
+              <Button type="button" onClick={openCreateForm}>
+                Nuevo producto
+              </Button>
+            )}
           </div>
         )}
         {!loading && !error && products.length > 0 && (
@@ -239,7 +247,7 @@ export function ProductsPage() {
                     <th>Stock</th>
                     <th>Estado</th>
                     <th>Actualizado</th>
-                    <th>Acciones</th>
+                    {(canManageProducts || canDeleteProducts) && <th>Acciones</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -258,23 +266,29 @@ export function ProductsPage() {
                           <Badge tone={stockTone[status]}>{status}</Badge>
                         </td>
                         <td>{formatDate(product.updatedAt)}</td>
-                        <td>
-                          <div className="row-actions">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingProduct(product)
-                                setShowForm(true)
-                              }}
-                            >
-                              Editar
-                            </Button>
-                            <Button type="button" variant="danger" onClick={() => setProductToDelete(product)}>
-                              Eliminar
-                            </Button>
-                          </div>
-                        </td>
+                        {(canManageProducts || canDeleteProducts) && (
+                          <td>
+                            <div className="row-actions">
+                              {canManageProducts && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setEditingProduct(product)
+                                    setShowForm(true)
+                                  }}
+                                >
+                                  Editar
+                                </Button>
+                              )}
+                              {canDeleteProducts && (
+                                <Button type="button" variant="danger" onClick={() => setProductToDelete(product)}>
+                                  Eliminar
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     )
                   })}
@@ -302,21 +316,27 @@ export function ProductsPage() {
                         <dd>{product.stock}</dd>
                       </div>
                     </dl>
-                    <div className="row-actions">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => {
-                          setEditingProduct(product)
-                          setShowForm(true)
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button type="button" variant="danger" onClick={() => setProductToDelete(product)}>
-                        Eliminar
-                      </Button>
-                    </div>
+                    {(canManageProducts || canDeleteProducts) && (
+                      <div className="row-actions">
+                        {canManageProducts && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                              setEditingProduct(product)
+                              setShowForm(true)
+                            }}
+                          >
+                            Editar
+                          </Button>
+                        )}
+                        {canDeleteProducts && (
+                          <Button type="button" variant="danger" onClick={() => setProductToDelete(product)}>
+                            Eliminar
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </article>
                 )
               })}

@@ -21,6 +21,7 @@ export class ApiError extends Error {
 }
 
 const getAuthToken = () =>
+  localStorage.getItem('sajada_token') ??
   localStorage.getItem('token') ??
   localStorage.getItem('authToken') ??
   localStorage.getItem('accessToken')
