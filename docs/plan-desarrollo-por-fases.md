@@ -68,6 +68,19 @@ Archivos principales:
 - `Herramientas-node-api/models/cliente.js`
 - `frontend-app/src`
 
+Verificacion minima:
+
+```bash
+cd Herramientas-node-api
+npm start
+```
+
+```bash
+cd frontend-app
+npm run lint
+npm run build
+```
+
 ## Desarrollador 2: Inventario, Categorias y Productos
 
 Rama:
@@ -90,6 +103,27 @@ Observacion tecnica:
 
 En `Herramientas-node-api/routes/producto.routes.js` existe un posible error porque se usa `include` sin estar definido en la consulta de productos. Este punto debe corregirse antes de integrar la rama.
 
+Archivos principales:
+
+- `Herramientas-node-api/routes/producto.routes.js`
+- `Herramientas-node-api/routes/categoria.routes.js`
+- `Herramientas-node-api/models/producto.js`
+- `Herramientas-node-api/models/categoria.js`
+- `frontend-app/src`
+
+Verificacion minima:
+
+```bash
+cd Herramientas-node-api
+npm start
+```
+
+```bash
+cd frontend-app
+npm run lint
+npm run build
+```
+
 ## Desarrollador 3: Ventas, Integracion y Calidad
 
 Rama:
@@ -108,6 +142,27 @@ Responsabilidades:
 - Revisar y completar documentacion Swagger.
 - Definir pruebas basicas del backend.
 - Preparar validaciones finales antes de produccion.
+
+Archivos principales:
+
+- `Herramientas-node-api/routes/venta.routes.js`
+- `Herramientas-node-api/models/venta.js`
+- `Herramientas-node-api/models/detalleventa.js`
+- `Herramientas-node-api/config/swagger.js`
+- `frontend-app/src`
+
+Verificacion minima:
+
+```bash
+cd Herramientas-node-api
+npm start
+```
+
+```bash
+cd frontend-app
+npm run lint
+npm run build
+```
 
 ## Fase 1: Estabilizacion Base
 
@@ -186,6 +241,13 @@ cd Herramientas-node-api
 npm start
 ```
 
+Criterios de aceptacion:
+
+- La funcionalidad asignada funciona localmente.
+- La rama no rompe modulos de otros desarrolladores.
+- No se incluyen archivos sensibles.
+- Existe Pull Request abierto hacia `develop`.
+
 ## Fase 3: Integracion en Develop
 
 Objetivo: integrar las tres ramas sin afectar produccion.
@@ -202,6 +264,28 @@ Motivo del orden:
 - Productos y categorias dependen de permisos.
 - Ventas depende de clientes, productos y stock.
 
+Por cada Pull Request:
+
+- Revisar cambios.
+- Resolver conflictos.
+- Ejecutar frontend.
+- Ejecutar backend.
+- Probar flujo manual.
+- Aprobar y mergear a `develop`.
+
+Validaciones:
+
+```bash
+cd frontend-app
+npm run lint
+npm run build
+```
+
+```bash
+cd Herramientas-node-api
+npm start
+```
+
 Pruebas manuales minimas:
 
 - Registro de usuario.
@@ -213,6 +297,13 @@ Pruebas manuales minimas:
 - Crear venta.
 - Verificar reduccion de stock.
 - Consultar venta creada.
+
+Criterios de aceptacion:
+
+- `develop` contiene las tres funcionalidades.
+- No hay errores de compilacion.
+- La API responde correctamente.
+- El frontend consume correctamente la API.
 
 ## Fase 4: Testing y Endurecimiento
 
@@ -230,6 +321,26 @@ Actividades recomendadas:
 - Validar errores de API.
 - Revisar seguridad basica: JWT, roles, CORS y Helmet.
 - Revisar documentacion Swagger.
+
+Nuevo flujo esperado:
+
+```bash
+cd Herramientas-node-api
+npm test
+```
+
+```bash
+cd frontend-app
+npm run lint
+npm run build
+```
+
+Criterios de aceptacion:
+
+- Tests backend pasan.
+- Build frontend pasa.
+- No hay errores criticos en flujos principales.
+- Swagger documenta endpoints relevantes.
 
 ## Fase 5: Preproduccion
 
@@ -256,6 +367,26 @@ Actividades:
 - Validar conexion a base de datos de staging.
 - Revisar documentacion de instalacion.
 
+Validaciones:
+
+```bash
+cd frontend-app
+npm run lint
+npm run build
+```
+
+```bash
+cd Herramientas-node-api
+npm start
+```
+
+Criterios de aceptacion:
+
+- Rama `release/v1.0.0` estable.
+- Sin bugs bloqueantes.
+- Funcionalidades principales verificadas.
+- Lista para Pull Request hacia `main`.
+
 ## Fase 6: Produccion
 
 Objetivo: actualizar `main` sin corromperla.
@@ -264,6 +395,15 @@ Flujo recomendado mediante Pull Request:
 
 ```text
 release/v1.0.0 -> main
+```
+
+Flujo local solo si el equipo lo autoriza:
+
+```bash
+git checkout main
+git pull origin main
+git merge release/v1.0.0
+git tag v1.0.0
 ```
 
 Despues del merge:

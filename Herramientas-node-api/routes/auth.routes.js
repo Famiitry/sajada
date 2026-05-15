@@ -38,15 +38,62 @@
  *         description: Invalid credentials
  */
 
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current authenticated user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user
+ *       401:
+ *         description: Invalid or missing token
+ */
+
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
-const Usuario = require('../models/usuario');
-const Cliente = require('../models/cliente');
-const { generateToken } = require('../middleware/auth');
+const { Op } = require('sequelize');
+const { Usuario, Cliente } = require('../models/index');
+const { authenticate, generateToken } = require('../middleware/auth');
 const { ValidationError, UnauthorizedError, ConflictError } = require('../utils/errors');
 
 const router = express.Router();
+
+const publicUser = (usuario, cliente = null) => ({
+  id: usuario.id,
+  username: usuario.username,
+  rol: usuario.rol,
+  clienteId: usuario.clienteId,
+  ...(cliente && { cliente })
+});
+
+const assertUniqueRegistration = async ({ username, email, identificacion }) => {
+  const existingUser = await Usuario.findOne({ where: { username } });
+  if (existingUser) {
+    throw new ConflictError('Username already exists');
+  }
+
+  const existingCliente = await Cliente.findOne({
+    where: {
+      [Op.or]: [
+        { email },
+        { identificacion }
+      ]
+    }
+  });
+
+  if (existingCliente?.email === email) {
+    throw new ConflictError('Email already exists');
+  }
+
+  if (existingCliente?.identificacion === identificacion) {
+    throw new ConflictError('Identificacion already exists');
+  }
+};
 
 router.post(
   '/register',
@@ -56,6 +103,9 @@ router.post(
     body('email').isEmail().withMessage('Valid email is required'),
     body('nombre').notEmpty().withMessage('Nombre is required'),
     body('apellido').notEmpty().withMessage('Apellido is required'),
+    body('telefono').notEmpty().withMessage('Telefono is required'),
+    body('direccion').notEmpty().withMessage('Direccion is required'),
+    body('identificacion').optional().notEmpty().withMessage('Identificacion cannot be empty'),
   ],
   async (req, res, next) => {
     try {
@@ -64,28 +114,26 @@ router.post(
         throw new ValidationError('Validation failed', errors.array());
       }
 
-      const { username, password, email, nombre, apellido, telefono, direccion, rol } = req.body;
+      const { username, password, email, nombre, apellido, telefono, direccion } = req.body;
+      const identificacion = req.body.identificacion || Date.now().toString();
 
-      const existingUser = await Usuario.findOne({ where: { username } });
-      if (existingUser) {
-        throw new ConflictError('Username already exists');
-      }
+      await assertUniqueRegistration({ username, email, identificacion });
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const cliente = await Cliente.create({
-        identificacion: Date.now().toString(),
+        identificacion,
         nombre,
         apellido,
         email,
-        telefono: telefono || '',
-        direccion: direccion || ''
+        telefono,
+        direccion
       });
 
       const usuario = await Usuario.create({
         username,
         password: hashedPassword,
-        rol: rol || 'user',
+        rol: 'user',
         clienteId: cliente.id
       });
 
@@ -98,12 +146,7 @@ router.post(
       res.status(201).json({
         message: 'User registered successfully',
         token,
-        user: {
-          id: usuario.id,
-          username: usuario.username,
-          rol: usuario.rol,
-          clienteId: cliente.id
-        }
+        user: publicUser(usuario)
       });
     } catch (error) {
       next(error);
@@ -145,16 +188,30 @@ router.post(
       res.json({
         message: 'Login successful',
         token,
-        user: {
-          id: usuario.id,
-          username: usuario.username,
-          rol: usuario.rol
-        }
+        user: publicUser(usuario)
       });
     } catch (error) {
       next(error);
     }
   }
 );
+
+router.get('/me', authenticate, async (req, res, next) => {
+  try {
+    const usuario = await Usuario.findByPk(req.user.id, {
+      include: [{ model: Cliente, as: 'cliente' }]
+    });
+
+    if (!usuario) {
+      throw new UnauthorizedError('Invalid token');
+    }
+
+    res.json({
+      user: publicUser(usuario, usuario.cliente)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

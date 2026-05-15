@@ -1,2 +1,71 @@
 @import './styles/tokens.css';
 @import './styles/globals.css';
+
+:root {
+  --text: #596579;
+  --text-h: #172033;
+  --bg: #ffffff;
+  --page: #f5f7fb;
+  --surface: #ffffff;
+  --border: #d9e0ea;
+  --input-bg: #ffffff;
+  --control-bg: #eef3f8;
+  --accent: #1877f2;
+  --accent-ring: rgba(24, 119, 242, 0.16);
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --sans: Inter, ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font: 16px/1.5 var(--sans);
+  letter-spacing: 0;
+  color: var(--text);
+  background: var(--page);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text-h);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 32px;
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: 20px;
+}
+
+a {
+  color: inherit;
+}
