@@ -81,30 +81,24 @@ function AppLayout() {
           </div>
 
           <nav className="nav-list" aria-label="Principal">
-            {canManageOperationalData && (
-              <NavLink to="/inventario">
-                <span aria-hidden="true">D</span>
-                Dashboard
-              </NavLink>
-            )}
-            {canManageOperationalData && (
-              <NavLink to="/productos">
-                <span aria-hidden="true">P</span>
-                Productos
-              </NavLink>
-            )}
+            <NavLink to="/inventario">
+              <span aria-hidden="true">D</span>
+              Dashboard
+            </NavLink>
+            <NavLink to="/productos">
+              <span aria-hidden="true">P</span>
+              Productos
+            </NavLink>
             {canManageOperationalData && (
               <NavLink to="/clientes">
                 <span aria-hidden="true">C</span>
                 Clientes
               </NavLink>
             )}
-            {canManageOperationalData && (
-              <NavLink to="/categorias">
-                <span aria-hidden="true">G</span>
-                Categorias
-              </NavLink>
-            )}
+            <NavLink to="/categorias">
+              <span aria-hidden="true">G</span>
+              Categorias
+            </NavLink>
           </nav>
         </div>
 
@@ -609,11 +603,11 @@ function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/inventario" element={<InventoryDashboardRoute />} />
+            <Route path="/productos" element={<ProductsPage />} />
+            <Route path="/categorias" element={<CategoriesPage />} />
             <Route element={<ProtectedRoute roles={['admin', 'vendedor']} />}>
               <Route path="/clientes" element={<ClientesPage />} />
-              <Route path="/inventario" element={<InventoryDashboardRoute />} />
-              <Route path="/productos" element={<ProductsPage />} />
-              <Route path="/categorias" element={<CategoriesPage />} />
             </Route>
           </Route>
         </Route>
